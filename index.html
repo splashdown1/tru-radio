@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#10140f">
+<title>TRU RADIO</title>
+<style>
+:root{--bg:#10140f;--ink:#e7f0dc;--dim:#a8b89a;--line:#2c3824;--leaf:#c6d86a;--card:#1a2216;--bad:#c4543a}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Georgia,serif}
+button,input{font:inherit;color:inherit}
+header{padding:16px 16px 6px} h1{font-size:22px;letter-spacing:.14em;margin:0;font-weight:normal} h1 span{color:var(--leaf)}
+.sub{color:var(--dim);font-size:13px}
+.warn{margin:10px 16px;padding:10px 12px;border:1px solid var(--bad);border-radius:10px;font-size:14px}
+.bar{display:flex;gap:8px;padding:8px 16px;flex-wrap:wrap} input{flex:1;min-width:140px;background:#0c100a;border:1px solid var(--line);border-radius:8px;padding:10px}
+button{background:var(--leaf);color:#14180f;border:0;border-radius:8px;padding:10px 12px;font-weight:bold}
+main{padding:0 16px 28px} .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 10px}
+.k{color:var(--leaf);font-size:12px;letter-spacing:.12em} .big{font-size:22px;margin:4px 0} .src{color:var(--dim);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<header><h1>TRU <span>RADIO</span></h1><p class="sub">On, it can read the public ships. Off, it cannot.</p></header>
+<div class="warn">This page calls out. Signal is the distress card. This is the network. Not a lane you can trust with the radio off.</div>
+<div class="bar"><button id="check">Check</button><input id="q" placeholder="storm, salt, rule…" enterkeyhint="search"><button id="send">Read</button></div>
+<main id="out"></main>
+<script>
+var SHIPS=["tru-speaks","tru-door","tru-rules","tru-water","tru-fire","tru-shelter","tru-cold","tru-salt","tru-sun","tru-quiet","tru-place","tru-join"];
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&","<":"<",">":">"}[c];});}
+function show(html){document.getElementById("out").innerHTML=html;}
+function textOf(html){
+  var d=document.createElement("div");
+  d.innerHTML=html.replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ");
+  return (d.textContent||"").replace(/\s+/g," ").trim();
+}
+async function check(){
+  show('<article class="card"><div class="k">RADIO</div><div class="big">Checking</div></div>');
+  var on=0;
+  await Promise.all(SHIPS.map(async function(name){
+    try{
+      var res=await fetch("https://raw.githubusercontent.com/splashdown1/"+name+"/main/README.md",{cache:"no-store"});
+      if(res.ok) on++;
+    }catch(e){}
+  }));
+  if(!on){show('<article class="card"><div class="k">OFF</div><div class="big">Radio off</div><div>No public ship answered. The files on this phone are all you have.</div></article>');return;}
+  show('<article class="card"><div class="k">ON</div><div class="big">Radio on</div><div>'+on+' of '+SHIPS.length+' public ships answered. A quote from here is a fetch, not a saved file.</div></article>');
+}
+async function read(){
+  var q=(document.getElementById("q").value||"").trim();
+  if(!q){check();return;}
+  show('<article class="card"><div class="k">RADIO</div><div class="big">Reading</div></article>');
+  var found=[];
+  await Promise.all(SHIPS.map(async function(name){
+    try{
+      var res=await fetch("https://raw.githubusercontent.com/splashdown1/"+name+"/main/index.html");
+      if(!res.ok) return;
+      var t=textOf(await res.text());
+      var i=t.toLowerCase().indexOf(q.toLowerCase().split(/\s+/)[0]);
+      if(i>=0) found.push({ship:name,s:t.slice(Math.max(0,i-60), i+160)});
+    }catch(e){}
+  }));
+  if(!found.length){show('<article class="card"><div class="k">GAP</div><div class="big">Not packed</div><div>No ship held that word, or the radio is off.</div></article>');return;}
+  show(found.slice(0,8).map(function(x){
+    return '<article class="card"><div class="k">QUOTE</div><div class="big">'+esc(x.ship)+'</div><div>'+esc(x.s)+'</div><div class="src">Fetched. Not saved on this phone.</div></article>';
+  }).join(""));
+}
+document.getElementById("check").onclick=check;
+document.getElementById("send").onclick=read;
+document.getElementById("q").onkeydown=function(e){if(e.key==="Enter") read();};
+show('<article class="card"><div class="k">RADIO</div><div class="big">Check first</div><div>On means a public file answered. Off means use what you saved.</div></article>');
+</script>
+</body>
+</html>
