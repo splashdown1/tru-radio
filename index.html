@@ -24,8 +24,8 @@ main{padding:0 16px 28px} .card{background:var(--card);border:1px solid var(--li
 <div class="bar"><button id="check">Check</button><input id="q" placeholder="storm, salt, rule…" enterkeyhint="search"><button id="send">Read</button></div>
 <main id="out"></main>
 <script>
-var SHIPS=["tru-speaks","tru-door","tru-rules","tru-water","tru-fire","tru-shelter","tru-cold","tru-salt","tru-sun","tru-quiet","tru-place","tru-join"];
-function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&","<":"<",">":">"}[c];});}
+var SHIPS=["tru-speaks","tru-door","tru-rules","tru-water","tru-fire","tru-shelter","tru-cold","tru-salt","tru-sun","tru-quiet","tru-place","tru-join","tru-signal","tru-fish"];
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function show(html){document.getElementById("out").innerHTML=html;}
 function textOf(html){
   var d=document.createElement("div");
@@ -33,7 +33,7 @@ function textOf(html){
   return (d.textContent||"").replace(/\s+/g," ").trim();
 }
 async function check(){
-  show('<article class="card"><div class="k">RADIO</div><div class="big">Checking</div></div>');
+  show('<article class="card"><div class="k">RADIO</div><div class="big">Checking</div></article>');
   var on=0;
   await Promise.all(SHIPS.map(async function(name){
     try{
